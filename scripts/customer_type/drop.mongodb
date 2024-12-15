@@ -1,0 +1,3 @@
+use('mitren_db')
+
+db.customer_types.drop()

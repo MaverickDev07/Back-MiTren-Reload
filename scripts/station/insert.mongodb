@@ -1,0 +1,47 @@
+use('mitren_db')
+
+const stationsData = [
+  { station_name: 'Station A1', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A2', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A3', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A4', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A5', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A6', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A7', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A8', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A9', zone_id: ObjectId('zone_id_1') },
+  { station_name: 'Station A10', zone_id: ObjectId('zone_id_1') },
+
+  { station_name: 'Station B1', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B2', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B3', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B4', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B5', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B6', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B7', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B8', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B9', zone_id: ObjectId('zone_id_2') },
+  { station_name: 'Station B10', zone_id: ObjectId('zone_id_2') },
+
+  { station_name: 'Station C1', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C2', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C3', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C4', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C5', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C6', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C7', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C8', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C9', zone_id: ObjectId('zone_id_3') },
+  { station_name: 'Station C10', zone_id: ObjectId('zone_id_3') }
+];
+
+// Insertar estaciones y actualizar zonas
+stationsData.forEach(function(station) {
+  const result = db.stations.insertOne(station);
+
+  // Actualizar la zona correspondiente en la colección 'zones'
+  db.zones.updateOne(
+    { _id: station.zone_id },
+    { $push: { stations: station.station_name } }
+  );
+});

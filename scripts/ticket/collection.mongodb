@@ -1,0 +1,117 @@
+use('mitren_db')
+
+db.createCollection('tickets', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['kiosk_code', 'promotion_title', 'total_price', 'payment_method', 'prices', 'route'],
+      properties: {
+        kiosk_code: {
+          bsonType: 'string',
+          description: 'Obtener de la Entidad Kiosk.kiosk_code'
+        },
+        promotion_title: {
+          bsonType: 'string',
+          description: 'Obtener de la Entidad Promotion.title'
+        },
+        total_price: {
+          bsonType: 'decimal',
+          description: 'No recibir por POST, se calcula en un middleware, del campo prices'
+        },
+        payment_method: {
+          bsonType: 'object',
+          required: ['method_payment', 'method_id'],
+          properties: {
+            method_payment: {
+              bsonType: 'string',
+              description: 'Obtener de la Entidad Method.method_name'
+            },
+            method_id: {
+              bsonType: 'string',
+              description: 'Este campo dependerá del ID de pagos por QR, POS, Wallet'
+            },
+          },
+        },
+
+        prices: {
+          bsonType: 'array',
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            bsonType: 'object',
+            required: ['qty', 'customer_type', 'base_price'],
+            properties: {
+              qty: {
+                bsonType: 'int',
+                minimum: 1,
+                description: 'Obtener del FrontEnd directamente.'
+              },
+              customer_type: {
+                bsonType: 'string'
+                description: 'Obtener de la Entidad Price.customer_type'
+              },
+              base_price: {
+                bsonType: 'decimal',
+                minimum: 0.1,
+                description: 'Si el ticket es "sin trasbordo", obtener de Price.base_price, si es trasbordo: sumar el price_base de la estación inicial, a la estación de trasbordo, y de la estación de trasbordo a la estación Final, esto de se debe calcular en un middleware.'
+              },
+            }
+          }
+        }
+        route: {
+          bsonType: 'object',
+          required: ['start_point', 'end_point', 'transfer_point'],
+          properties: {
+            start_point: {
+              bsonType: 'object',
+              properties: {
+                start_line: {
+                  bsonType: 'string',
+                  description: 'Es el nombre de la Entidad Line.line_name, obtener de la petición del flujo ticket, del paso 2.2 el endpoint "/v1/kiosks/env-id/station" de la respuesta el campo kiosk.station_id.line_id, como es un array este campo primero debo saber que estación final escogió el paso 2.1, para saber si la ruta es en la misma línea o es un trasbordo.'
+                },
+                start_station: {
+                  bsonType: 'string',
+                  description: 'Obtener de la petición de ticket, del paso 2.2 el endpoint "/v1/kiosks/env-id/station" de la respuesta el campo kiosk.station_id.station_name'
+                }
+              }
+            },
+            end_point: {
+              bsonType: 'object',
+              properties: {
+                end_line: {
+                  bsonType: 'string',
+                  description: 'Es el nombre de la Entidad Line.line_name, obtener de la petición del flujo ticket, del paso 2.1, de la estación final.'
+                },
+                end_station: {
+                  bsonType: 'string',
+                  description: 'Obtener de la petición del flujo ticket, del paso 2.1, de la estación final.'
+                }
+              }
+            },
+            transfer_point: {
+              bsonType: 'object',
+              properties: {
+                start_line: {
+                  bsonType: 'string',
+                  description: 'Es el nombre de la Entidad Line.line_name, obtener de la petición del flujo ticket, del paso 3, y calular con un middleware si es trasbordo o no, dependiendo de la estación inicial y final, y si las lineas son distintas.'
+                },
+                start_station: {
+                  bsonType: 'string',
+                  description: 'Obtener de la petición del flujo ticket, del paso 3, y calular con un middleware si es trasbordo o no, dependiendo de la estación inicial y final, y si las lineas son distintas.
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+})
+
+/*
+Del Flujo Ticket por cada paso obtener los siguientes campos:
+Paso 1:
+  Para el paso 2: Dependiendo si el Cliente escogió una línea guardar su `id` y su `line_name` de lines[n].id y lines[n].line_name. esto sirve para el paso 2.1
+  Para el Ticket: solo se necesita `line_name`
+Paso 2.1:
+*/

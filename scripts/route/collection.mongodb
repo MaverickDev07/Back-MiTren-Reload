@@ -1,0 +1,48 @@
+use('mitren_db')
+
+db.createCollection('routes', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['zones', 'prices'],
+      properties: {
+        zones: {
+          bsonType: 'array',
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            bsonType: 'object',
+            required: ['zone_name', 'zone_id'],
+            properties: {
+              zone_name: {
+                bsonType: 'string'
+              },
+              zone_id: {
+                bsonType: 'objectId'
+              },
+            }
+          }
+        },
+        prices: {
+          bsonType: 'array',
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            bsonType: 'object',
+            required: ['customer_type', 'base_price'],
+            properties: {
+              customer_type: {
+                bsonType: 'string',
+                description: 'Cada tipo de cliente tiene diferente precio depende la ruta.'
+              },
+              base_price: {
+                bsonType: 'decimal',
+                description: 'Precio base de una ruta en particular para un tipo de cliente.'
+              },
+            }
+          }
+        }
+      }
+    }
+  }
+})

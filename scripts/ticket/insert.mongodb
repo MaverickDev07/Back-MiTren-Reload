@@ -1,0 +1,9 @@
+use('mitren_db')
+
+db.tickets.insertOne({
+  start_station: 'Molina',
+  end_station: 'nico@gmail.com',
+  kiosk_id: '----',
+  method_name: 'seller',
+  total_price: NumberDecimal('0')
+})

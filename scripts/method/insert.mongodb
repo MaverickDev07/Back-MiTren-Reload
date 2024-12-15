@@ -1,0 +1,5 @@
+use('mitren_db')
+
+db.methods.insertOne({
+  line_name: 'Línea Roja'
+})

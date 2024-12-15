@@ -1,0 +1,22 @@
+use('mitren_db')
+
+db.createCollection('kiosks', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['kiosk_code', 'station_id'],
+      properties: {
+        kiosk_code: {
+          bsonType: 'string',
+          minLength: 5,
+          maxLength: 10,
+        },
+        station_id: {
+          bsonType: 'objectId'
+        }
+      }
+    }
+  }
+})
+
+db.kiosks.createIndex({ kiosk_code: 1 }, { unique: true })

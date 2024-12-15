@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"kiosk_code":{"$numberInt":"1"}},"name":"kiosk_code_1","background":true,"unique":true}],"uuid":"f87611a18cf14f93973de57ea44c965c","collectionName":"kiosks","type":"collection"}

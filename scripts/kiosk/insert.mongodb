@@ -1,0 +1,5 @@
+use('mitren_db')
+
+db.kiosks.insertOne({
+  line_name: 'Línea Roja'
+})

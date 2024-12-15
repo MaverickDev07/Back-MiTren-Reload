@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo
+    container_name: mitren_db
+    command: mongod --auth
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: admin
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongo_data:/data/db

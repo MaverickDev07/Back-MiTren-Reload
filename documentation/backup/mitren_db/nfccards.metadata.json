@@ -1,0 +1,1 @@
+{"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_"},{"v":{"$numberInt":"2"},"key":{"card_code":{"$numberInt":"1"}},"name":"card_code_1","background":true,"unique":true}],"uuid":"157476060abe4880997f3f757c1db21c","collectionName":"nfccards","type":"collection"}

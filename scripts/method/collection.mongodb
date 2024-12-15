@@ -1,0 +1,15 @@
+use('mitren_db')
+
+db.createCollection('methods', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['method_name'],
+      properties: {
+        method_name: {
+          bsonType: 'string'
+        },
+      }
+    }
+  }
+})

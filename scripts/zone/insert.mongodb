@@ -1,0 +1,28 @@
+use('mitren_db')
+
+const lineRedId = ObjectId("64da9f..."); // ID de la línea Roja
+const lineYellowId = ObjectId("64da9g..."); // ID de la línea Amarilla
+const lineGreenId = ObjectId("64da9h..."); // ID de la línea Verde
+
+db.zones.insertMany([
+  // Zonas para la Línea Roja
+  { zone_code: 'Z-100', zone_name: 'Zona 1', line_id: lineRedId, stations: [] },
+  { zone_code: 'Z-200', zone_name: 'Zona 2', line_id: lineRedId, stations: [] },
+  { zone_code: 'Z-300', zone_name: 'Zona 3', line_id: lineRedId, stations: [] },
+  { zone_code: 'Z-400', zone_name: 'Zona 4', line_id: lineRedId, stations: [] },
+  { zone_code: 'Z-500', zone_name: 'Zona 5', line_id: lineRedId, stations: [] },
+
+  // Zonas para la Línea Amarilla
+  { zone_code: 'Z-600', zone_name: 'Zona 1', line_id: lineYellowId, stations: [] },
+  { zone_code: 'Z-700', zone_name: 'Zona 2', line_id: lineYellowId, stations: [] },
+  { zone_code: 'Z-800', zone_name: 'Zona 3', line_id: lineYellowId, stations: [] },
+  { zone_code: 'Z-900', zone_name: 'Zona 4', line_id: lineYellowId, stations: [] },
+  { zone_code: 'Z-1000', zone_name: 'Zona 5', line_id: lineYellowId, stations: [] },
+
+  // Zonas para la Línea Verde
+  { zone_code: 'Z-1100', zone_name: 'Zona 1', line_id: lineGreenId, stations: [] },
+  { zone_code: 'Z-1200', zone_name: 'Zona 2', line_id: lineGreenId, stations: [] },
+  { zone_code: 'Z-1300', zone_name: 'Zona 3', line_id: lineGreenId, stations: [] },
+  { zone_code: 'Z-1400', zone_name: 'Zona 4', line_id: lineGreenId, stations: [] },
+  { zone_code: 'Z-1500', zone_name: 'Zona 5', line_id: lineGreenId, stations: [] },
+])

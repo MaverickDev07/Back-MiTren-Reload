@@ -1,0 +1,15 @@
+use('mitren_db')
+
+db.createCollection('customer_types', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['customer_type'],
+      properties: {
+        customer_type: {
+          bsonType: 'string'
+        },
+      }
+    }
+  }
+})

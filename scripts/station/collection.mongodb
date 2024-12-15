@@ -1,0 +1,20 @@
+use('mitren_db')
+
+db.createCollection('stations', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['station_name', 'zone_id'],
+      properties: {
+        station_name: {
+          bsonType: 'string'
+        },
+        zone_id: {
+          bsonType: 'objectId'
+        }
+      }
+    }
+  }
+})
+
+db.stations.createIndex({ station_name: 1 }, { unique: true })

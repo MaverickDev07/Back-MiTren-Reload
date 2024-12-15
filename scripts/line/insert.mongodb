@@ -1,0 +1,7 @@
+use('mitren_db')
+
+db.lines.insertMany([
+  { line_name: 'Línea Roja' },
+  { line_name: 'Línea Amarilla' },
+  { line_name: 'Línea Verde' }
+])

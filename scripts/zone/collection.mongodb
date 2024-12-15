@@ -1,0 +1,33 @@
+use('mitren_db')
+
+db.createCollection('zones', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['zone_code', 'zone_name', 'line_id'],
+      properties: {
+        zone_code: {
+          bsonType: 'string',
+          minLength: 5,
+          maxLength: 10,
+          description: 'Debe ser un codigo único, y correlativo a la anterior zona para poder ordenar de forma ascendente o descendente.'
+        },
+        zone_name: {
+          bsonType: 'string'
+        },
+        line_id: {
+          bsonType: 'objectId'
+        },
+        stations: {
+          bsonType: 'array',
+          uniqueItems: true,
+          items: {
+            bsonType: 'string'
+          }
+        }
+      }
+    }
+  }
+})
+
+db.zones.createIndex({ zone_code: 1 }, { unique: true })

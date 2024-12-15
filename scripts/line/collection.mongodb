@@ -1,0 +1,15 @@
+use('mitren_db')
+
+db.createCollection('lines', {
+  validator: {
+    $jsonSchema: {
+      bsonType: 'object',
+      required: ['line_name'],
+      properties: {
+        line_name: {
+          bsonType: 'string'
+        },
+      }
+    }
+  }
+})
