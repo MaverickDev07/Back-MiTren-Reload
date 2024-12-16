@@ -15,7 +15,7 @@ import localStrategy from './routes/v1/auth/localStrategy'
 // App
 const app: Application = express()
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'))
-const port = EnvManager.getPort(3000)
+const port = EnvManager.getPort(3500)
 
 // Settings
 app.disable('x-powered-by')
@@ -31,7 +31,7 @@ app.use(passport.initialize())
 passport.use(localStrategy)
 
 // Security
-const whitelist: string[] = ['http://localhost:5173', 'http://localhost:3000']
+const whitelist: string[] = ['http://localhost:5173', 'http://localhost:3500']
 const options: cors.CorsOptions = {
   exposedHeaders: 'Authorization, Content-Disposition',
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
