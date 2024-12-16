@@ -31,7 +31,11 @@ export default class RouteRepository extends BaseRepository<RouteAttributes> {
     const prevPage = hasPrevPage ? page - 1 : null
     const nextPage = hasNextPage ? page + 1 : null
 
-    const paginated = route.stations.slice(startIndex, endIndex)
+    // const paginated = route.stations.slice(startIndex, endIndex) /*/ _id: ObjectId('66f187fef3d281d6c0c695fb')
+    const paginated = route.stations.slice(startIndex, endIndex).map(station => ({
+      id: station.station_id.toString(),
+      station_name: station.station_name,
+    }));
 
     // Devolver paginación
     const paginacion = {

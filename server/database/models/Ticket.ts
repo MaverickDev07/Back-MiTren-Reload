@@ -1,50 +1,49 @@
-/* eslint-disable max-lines */
-import { Schema, model, Document } from 'mongoose'
+import { Schema, model, Document } from 'mongoose';
 
 type PaymentMethod = {
-  method_name: string
-  method_id: string
-}
+  method_name: string;
+  method_id: any; // Cambiado a ObjectId
+};
 
 type StartStation = {
-  start_station: string
-  start_line: string
-}
+  start_station: string;
+  start_line: string;
+};
 
 type EndStation = {
-  end_station: string
-  end_line: string
-}
+  end_station: string;
+  end_line: string;
+};
 
 type TransferStation = {
-  is_transfer: boolean
-  transfer_station: string
-}
+  is_transfer: boolean;
+  transfer_station?: string; // Puede ser opcional
+};
 
 type Price = {
-  qty: number
-  customer_type: string
-  base_price: number
-}
+  qty: number;
+  customer_type: string;
+  base_price: number;
+};
 
 type Route = {
-  start_point: StartStation
-  end_point: EndStation
-  transfer_point: TransferStation
-}
+  start_point: StartStation;
+  end_point: EndStation;
+  transfer_point?: TransferStation; // Puede ser opcional
+};
 
 export type TicketEntity = {
-  id?: string | any
-  kiosk_code: string
-  promotion_title?: string
-  total_price: number
-  payment_method: PaymentMethod
-  prices: Array<Price>
-  route: Route
-  status?: string
-  createdAt?: Date
-  updatedAt?: Date
-}
+  id?: string | any;
+  kiosk_code: string;
+  promotion_title?: string;
+  total_price: number;
+  payment_method: PaymentMethod;
+  prices: Array<Price>;
+  route: Route;
+  status?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
 export interface TicketAttributes extends TicketEntity, Document {}
 interface PaymentMethodAttributes extends PaymentMethod, Document {}
@@ -74,7 +73,8 @@ const PriceSchema = new Schema<PriceAttributes>(
     timestamps: false,
     versionKey: false,
   },
-)
+);
+
 const RouteSchema = new Schema<RouteAttributes>(
   {
     start_point: {
@@ -123,14 +123,15 @@ const RouteSchema = new Schema<RouteAttributes>(
           trim: true,
         },
       },
-      required: true,
+      required: false,
     },
   },
   {
     timestamps: false,
     versionKey: false,
   },
-)
+);
+
 const PaymentMethodSchema = new Schema<PaymentMethodAttributes>(
   {
     method_name: {
@@ -140,16 +141,16 @@ const PaymentMethodSchema = new Schema<PaymentMethodAttributes>(
       required: true,
     },
     method_id: {
-      type: String,
-      trim: true,
+      type: Schema.Types.ObjectId, // Cambiado a ObjectId
       required: true,
+      ref: 'methods', // Referencia a la colección de métodos de pago
     },
   },
   {
     timestamps: false,
     versionKey: false,
   },
-)
+);
 
 const TicketSchema = new Schema<TicketAttributes>(
   {
@@ -194,8 +195,8 @@ const TicketSchema = new Schema<TicketAttributes>(
     timestamps: true,
     versionKey: false,
   },
-)
+);
 
-const Ticket = model<TicketAttributes>('Ticket', TicketSchema)
+const Ticket = model<TicketAttributes>('Ticket', TicketSchema);
 
-export default Ticket
+export default Ticket;

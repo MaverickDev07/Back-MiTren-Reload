@@ -1,13 +1,12 @@
 {
   "useTabs": false,
   "semi": false,
-  "singleQuote": true,
+  "singleQuote": true,"singleQuote": true,
   "arrowParens": "avoid",
   "bracketSpacing": true,
   "bracketSameLine": true,
   "editorconfig": true,
   "jsxSingleQuote": true,
   "printWidth": 100,
-  "trailingComma": "all",
-  "endOfLine": "lf"
+  "trailingComma": "all"
 }

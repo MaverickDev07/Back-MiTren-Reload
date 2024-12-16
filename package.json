@@ -6,7 +6,7 @@
   "scripts": {
     "format": "prettier --write .",
     "lint": "tsc --noEmit && eslint \"server/**/*.ts*\"",
-    "start": "pnpm run start:server",
+    "start": "npm run start:server",
     "dev": "dotenv -- nodemon --exec \"node -r esbuild-register ./server.ts\" -e .ts",
     "start:server": "NODE_ENV=development DEBUG=mitren-api*,app:*,error:* nodemon server.ts",
     "start:serverw": "SET NODE_ENV=development & SET DEBUG=mitren-api*,app:* & nodemon server.ts"
