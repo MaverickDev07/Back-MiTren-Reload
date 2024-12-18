@@ -14,19 +14,21 @@ export default class PriceRepository extends BaseRepository<PriceAttributes> {
   }
 
   async getByLineId(id: string | Types.ObjectId): Promise<any> {
-    // Promise<Array<any>>
-    console.log(id)
-    const route = await Route.findOne({ line_id: id, status: 'ACTIVE' }).exec()
-    const customerTypes = await CustomerType.find({ status: 'ACTIVE' }).exec()
-    const response: any = []
 
+    const lineId = typeof id === 'string' ? Types.ObjectId(id) : id;
+
+    console.log(lineId);
+    const route = await Route.findOne({ line_id: lineId, status: 'ACTIVE' }).exec();
+    const customerTypes = await CustomerType.find({ status: 'ACTIVE' }).exec();
+    const response: any = [];
+  
     if (!route) {
       throw new ApiError({
         name: 'STATIONS_NOT_IN_ROUTE',
         message: 'Las estaciones no pertenecen a la misma ruta.',
         status: 400,
         code: 'ERR_SNR',
-      })
+      });
     }
 
     // Obtener todas las combinaciones de estaciones en la ruta
@@ -65,7 +67,7 @@ export default class PriceRepository extends BaseRepository<PriceAttributes> {
   ): Promise<any> {
     const route = await Route.findOne({
       'stations.station_id': { $all: [start_station_id, end_station_id] },
-    })
+    });
 
     if (!route) {
       throw new ApiError({
@@ -76,15 +78,12 @@ export default class PriceRepository extends BaseRepository<PriceAttributes> {
       })
     }
 
-    // Encuentra los índices de las estaciones de inicio y fin en el array 'stations'
     const startIndex = route.stations.findIndex(
       station => station.station_id.toString() === start_station_id,
-    )
+    );
     const endIndex = route.stations.findIndex(
       station => station.station_id.toString() === end_station_id,
     )
-
-    // Extrae el rango de estaciones
     const selectedStations = route.stations.slice(startIndex, endIndex + 1)
     let modifiedCount = 0
     let upsertedCount = 0
@@ -114,11 +113,10 @@ export default class PriceRepository extends BaseRepository<PriceAttributes> {
           { upsert: true },
         )
 
-        if (createOrUpdatePrice.upsertedCount) {
-          upsertedCount++
-        }
-        if (createOrUpdatePrice.modifiedCount) {
-          modifiedCount++
+        if (createOrUpdatePrice.n === 0 && createOrUpdatePrice.ok) {
+          upsertedCount++; // Si no hubo coincidencias y la operación fue exitosa
+        } else if (createOrUpdatePrice.n > 0) {
+          modifiedCount++; // Al menos un documento fue modificado
         }
       }
     }

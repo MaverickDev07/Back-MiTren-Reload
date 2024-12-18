@@ -8,6 +8,7 @@ class UserResource extends BaseResource<UserAttributes, UserEntity>() {
       fullname: this.instance.fullname,
       doc_number: this.instance.doc_number,
       role_name: this.instance.role_name,
+      password: this.instance.password,
       status: this.instance.status,
       createdAt: this.instance.createdAt,
       updatedAt: this.instance.updatedAt,
@@ -18,3 +19,4 @@ class UserResource extends BaseResource<UserAttributes, UserEntity>() {
 }
 
 export default UserResource
+

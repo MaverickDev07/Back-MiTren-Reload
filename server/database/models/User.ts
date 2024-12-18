@@ -5,21 +5,10 @@ export type UserEntity = {
   fullname: string
   doc_number: string
   role_name: string
-  password?: string
+  password: string
   status?: string
   createdAt?: Date
   updatedAt?: Date
-  /*email: string
-  password?: string
-  name: string
-  lastname: string
-  doc_type: string
-  doc_number: string
-  address: string
-  role_name: string
-  status?: string
-  createdAt?: Date
-  updatedAt?: Date*/
 }
 
 export interface UserAttributes extends UserEntity, Document {}
@@ -48,6 +37,7 @@ const UserSchema = new Schema<UserAttributes>(
     password: {
       type: String,
       trim: true,
+      required: true
     },
     status: {
       type: String,

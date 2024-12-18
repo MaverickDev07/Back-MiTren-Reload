@@ -28,11 +28,11 @@ export default class UserRepository extends BaseRepository<UserAttributes> {
   }
 
   async updatePasswordByUserId(userId: string | Types.ObjectId, data: UpdateQuery<UserAttributes>) {
-    data.password = await this.encryptPassword(data.password)
-
+    (data as any).password = await this.encryptPassword((data as any).password)
+  
     return this.model.findByIdAndUpdate(userId, data, { new: true }).exec()
   }
-
+  
   getAuthByDocNumber(doc_number: string): Promise<UserAttributes | null> {
     return this.model.findOne({ doc_number }).exec()
   }

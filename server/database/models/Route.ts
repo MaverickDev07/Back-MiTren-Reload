@@ -1,13 +1,13 @@
-import { Schema, model, Document } from 'mongoose'
+import { Schema, model, Document, Types } from 'mongoose'
 
 type Station = {
-  station_id: Schema.Types.ObjectId
+  station_id: Types.ObjectId
   station_name: string
 }
 
 export type RouteEntity = {
   id?: string | any
-  line_id: Schema.Types.ObjectId
+  line_id: Types.ObjectId
   stations: Array<Station>
   status?: string
   createdAt?: Date
@@ -42,9 +42,7 @@ const RouteSchema = new Schema<RouteAttributes>(
       ],
       required: true,
       validate: {
-        validator: (value: Station[]) => {
-          return value.length > 1
-        },
+        validator: (value: Station[]) => value.length > 1,
         message: 'El array "stations" debe contener al menos dos ítems.',
       },
     },
