@@ -1,0 +1,4 @@
+levantar el docker
+docker-compose up -d
+
+docker logs mitren_db_2

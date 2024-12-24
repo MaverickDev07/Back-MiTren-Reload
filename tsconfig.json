@@ -23,6 +23,8 @@
     "skipLibCheck": true,
     "noImplicitAny": true,
     "sourceMap": true,
+    "allowJs": true,
+    "checkJs": false,
     "typeRoots": ["./server/types", "./node_modules/@types"]
   },
   "exclude": ["node_modules", "dist", "mongo_data", "scripts"],

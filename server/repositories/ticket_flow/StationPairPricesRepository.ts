@@ -51,13 +51,12 @@ export default class StationPairPricesRepository {
     if (!is_transfer) {
       // Ruta directa sin transbordo
       const prices = await Price.find({
-        'start_station.station_id': start_station_id,
-        'end_station.station_id': end_station_id,
+        'start_station.station_id': new Types.ObjectId(start_station_id),
+        'end_station.station_id': new Types.ObjectId(end_station_id),
       })
         .select({ base_price: 1, customer_type: 1 })
         .sort({ base_price: -1 })
         .exec()
-
       const line_direct = await Line.findById(line_id)
       if (!line_direct) throw new Error('No se encontró la línea directa entre las estaciones.')
       const line_name: string = line_direct.line_name
@@ -79,13 +78,13 @@ export default class StationPairPricesRepository {
       )
 
       const prices1 = await Price.find({
-        'start_station.station_id': start_station_id,
-        'end_station.station_id': transferStation._id,
+        'start_station.station_id': new Types.ObjectId(start_station_id),
+        'end_station.station_id': new Types.ObjectId(transferStation._id),
       }).exec()
 
       const prices2 = await Price.find({
-        'start_station.station_id': transferStation._id,
-        'end_station.station_id': end_station_id,
+        'start_station.station_id': new Types.ObjectId(transferStation._id),
+        'end_station.station_id': new Types.ObjectId(end_station_id),
       }).exec()
 
       // Combinar y sumar precios por 'customer_type' coincidentes
