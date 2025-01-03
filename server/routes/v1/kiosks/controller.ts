@@ -13,7 +13,6 @@ export const listKiosks = async (req: Request, res: Response, next: NextFunction
         filterBy: req.query.filter_by as string,
       }),
     )
-
     res.status(200).json({ kiosks })
   } catch (error) {
     next(error)

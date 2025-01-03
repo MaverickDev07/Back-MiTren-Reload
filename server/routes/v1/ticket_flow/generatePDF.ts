@@ -57,11 +57,6 @@ export const ticketDocument = (ticket: TicketEntity) => {
           {
             text: [
               `${ticket?.route?.end_point?.end_station}\n`,
-              {
-                text: `${ticket?.route?.end_point?.end_line}\n`,
-                bold: true,
-                alignment: 'center',
-              },
             ],
             style: 'content',
           },

@@ -279,39 +279,75 @@ export const updatePriceSchema = Joi.object({
 }).or('base_price', 'customer_type', 'customer_type_id', 'start_station', 'end_station')
 
 // Ticket
+// export const createTicketSchema = Joi.object({
+//   kiosk_code: Joi.string().min(3).max(10).required(),
+//   total_price: Joi.number().min(0.1).required(),
+//   payment_method: Joi.object({
+//     method_name: Joi.string().min(3).max(30).required(),
+//     method_id: Joi.string().min(3).max(24).required(),
+//   }).required(),
+//   prices: Joi.array()
+//     .min(1)
+//     .items(
+//       Joi.object({
+//         qty: Joi.number().min(1).required(),
+//         customer_type: Joi.string().min(3).max(15).required(),
+//         base_price: Joi.number().min(0.1).required(),
+//       }),
+//     )
+//     .required(),
+//   route: Joi.object({
+//     start_point: Joi.object({
+//       start_station: Joi.string().min(3).max(50).required(),
+//       start_line: Joi.string().min(3).max(30).required(),
+//     }).required(),
+//     end_point: Joi.object({
+//       end_station: Joi.string().min(3).max(50).required(),
+//       end_line: Joi.string().min(3).max(30).required(),
+//     }).required(),
+//     transfer_point: Joi.object({
+//       is_transfer: Joi.boolean().required(),
+//       transfer_station: Joi.string().min(3).max(50).required(),
+//     }).required(),
+//   }).required(),
+//   status: Joi.string().min(3).max(15),
+// })
+
+// middlewares/requestSchemas.ts
 export const createTicketSchema = Joi.object({
-  kiosk_code: Joi.string().min(3).max(10).required(),
-  total_price: Joi.number().min(0.1).required(),
+  paypago: Joi.string().required().valid('COMPLETADO'),
   payment_method: Joi.object({
-    method_name: Joi.string().min(3).max(30).required(),
-    method_id: Joi.string().min(3).max(24).required(),
+    method_name: Joi.string().required().valid('PQR', 'EFECTIVO', 'TARJETA DÉBITO/CRÉDITO'),
+    method_id: Joi.string().required()
   }).required(),
   prices: Joi.array()
     .min(1)
     .items(
       Joi.object({
         qty: Joi.number().min(1).required(),
-        customer_type: Joi.string().min(3).max(15).required(),
-        base_price: Joi.number().min(0.1).required(),
-      }),
-    )
-    .required(),
+        customer_type: Joi.string().required(),
+        base_price: Joi.number().min(0.1).required()
+      })
+    ).required(),
   route: Joi.object({
     start_point: Joi.object({
-      start_station: Joi.string().min(3).max(50).required(),
-      start_line: Joi.string().min(3).max(30).required(),
+      start_station: Joi.string().required(),
+      start_line: Joi.string().required()
     }).required(),
     end_point: Joi.object({
-      end_station: Joi.string().min(3).max(50).required(),
-      end_line: Joi.string().min(3).max(30).required(),
+      end_station: Joi.string().required(),
+      // end_line: Joi.string().required()
     }).required(),
     transfer_point: Joi.object({
       is_transfer: Joi.boolean().required(),
-      transfer_station: Joi.string().min(3).max(50).required(),
-    }).required(),
-  }).required(),
-  status: Joi.string().min(3).max(15),
-})
+      transfer_station: Joi.string().when('is_transfer', {
+        is: true,
+        then: Joi.string().required(),
+        otherwise: Joi.string().allow('').optional() // Permitir vacío si is_transfer es false
+      })
+    }).required()
+  }).required()
+}).unknown(true);
 
 export const updateTicketSchema = Joi.object({
   promotion_title: Joi.string().min(3).max(30),
@@ -335,20 +371,28 @@ export const updateTicketSchema = Joi.object({
     }),
     end_point: Joi.object({
       end_station: Joi.string().min(3).max(50),
-      end_line: Joi.string().min(3).max(30),
+      // end_line: Joi.string().min(3).max(30),
     }),
     transfer_point: Joi.object({
-      is_transfer: Joi.boolean(),
-      transfer_station: Joi.string().min(3).max(50),
+      is_transfer: Joi.boolean().required(),
+      transfer_station: Joi.string()
+        .allow("") // Permite una cadena vacía
+        .when('is_transfer', {
+          is: true,
+          then: Joi.string().required(), // Obligatorio si is_transfer es true
+          otherwise: Joi.string().allow("").optional() // Permite vacío si is_transfer es false
+        })
     }),
   }),
   status: Joi.string().min(3).max(15),
 }).or('promotion_title', 'payment_method', 'prices', 'route', 'status')
 
-// Cash
-export const generateCashSchema = Joi.object({
-  amount: Joi.number().min(0.1).required(),
+export const verifyTicketSchema = Joi.object({
+  qr_code: Joi.string().required(),
+  current_station: Joi.string().required(),
+  current_line: Joi.string().required()
 })
+
 
 // Wallet
 export const createWalletSchema = Joi.object({

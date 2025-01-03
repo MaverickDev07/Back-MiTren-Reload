@@ -22,6 +22,7 @@ const PaymentSchema = new Schema({
   pan: String,
   mensaje: String,
   comercio: String,
+  terminal: String,
 }, {
   timestamps: true,
   versionKey: false

@@ -5,6 +5,7 @@ import Kiosk from '../../../database/models/Kiosk'
 import ApiError from '../../../errors/ApiError'
 import VeripagosService from '../../../utils/VeripagosService'
 import EnvManager from '../../../config/EnvManager'
+import Method from '../../../database/models/Method'
 
 const veripagosService = new VeripagosService(
   'https://veripagos.com/api',
@@ -76,37 +77,77 @@ export const preloadVeripagosData = (req: Request, res: Response, next: NextFunc
     next(error)
   }
 }
+// export const computeTotalPrice = async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const { prices } = req.body
+//     const kioskId = EnvManager.getKioskId()
+//     if (!kioskId)
+//       throw new ApiError({
+//         name: 'NOT_FOUND_ERROR',
+//         message: 'KioskId not found',
+//         status: 400,
+//         code: 'ERR_NF',
+//       })
+//     const kiosk = await Kiosk.findById(kioskId)
+//     if (!kiosk)
+//       throw new ApiError({
+//         name: 'MODEL_NOT_FOUND_ERROR',
+//         message: 'Kiosk not found',
+//         status: 400,
+//         code: 'ERR_MNF',
+//       })
+//     const totalPrice = prices.reduce((acc: number, price: any) => {
+//       return acc + price.qty * price.base_price
+//     }, 0)
+
+//     req.body.kiosk_code = kiosk.kiosk_code
+//     req.body.total_price = totalPrice
+
+//     next()
+//   } catch (error) {
+//     next(error)
+//   }
+// }
+
 export const computeTotalPrice = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { prices } = req.body
-    const kioskId = EnvManager.getKioskId()
-    if (!kioskId)
+    const { prices } = req.body;
+    const kioskId = EnvManager.getKioskId();
+
+    if (!kioskId) {
       throw new ApiError({
         name: 'NOT_FOUND_ERROR',
         message: 'KioskId not found',
         status: 400,
         code: 'ERR_NF',
-      })
-    const kiosk = await Kiosk.findById(kioskId)
-    if (!kiosk)
+      });
+    }
+
+    const kiosk = await Kiosk.findById(kioskId);
+    if (!kiosk) {
       throw new ApiError({
         name: 'MODEL_NOT_FOUND_ERROR',
         message: 'Kiosk not found',
         status: 400,
         code: 'ERR_MNF',
-      })
+      });
+    }
+
+    // Calcular precio total
     const totalPrice = prices.reduce((acc: number, price: any) => {
-      return acc + price.qty * price.base_price
-    }, 0)
+      return acc + price.qty * price.base_price;
+    }, 0);
 
-    req.body.kiosk_code = kiosk.kiosk_code
-    req.body.total_price = totalPrice
+    // Añadir campos requeridos al body
+    req.body.kiosk_code = kiosk.kiosk_code;
+    req.body.total_price = totalPrice;
 
-    next()
+    next();
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
+
 export const validatePrices = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { total_price, payment_method } = req.body
@@ -140,3 +181,32 @@ export const validatePrices = async (req: Request, res: Response, next: NextFunc
     next(error)
   }
 }
+
+
+export const verifyPaymentStatus = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { payment_method, paypago } = req.body;
+
+    if (paypago !== 'COMPLETADO') {
+      throw new ApiError({
+        name: 'PAYMENT_ERROR',
+        message: 'El pago no está completado',
+        status: 400,
+      });
+    }
+
+    // Verificar que el método existe en la base de datos
+    const methodExists = await Method.findById(payment_method.method_id);
+    if (!methodExists) {
+      throw new ApiError({
+        name: 'PAYMENT_ERROR',
+        message: 'Método de pago no encontrado',
+        status: 400
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,26 +1,17 @@
 import { EventEmitter } from 'events';
 import { SerialPort } from 'serialport';
+import { ByteLengthParser } from '@serialport/parser-byte-length';
 
-// Interfaces para los tipos de datos
-interface TubeStatus {
-    tubeStatus: {
-        [key: number]: number;
-    };
-    total: number;
+interface TubeMappingItem {
+    denomination: number;
+    index: number;
 }
 
-interface PaymentCompletedData {
-    message: string;
-    totalPaid: string;
-    change: string | null;
+interface CambioValor {
+    valor: number;
+    comando: number[];
 }
 
-interface TubeStatusEvent {
-    total: number;
-    acceptedBills: number[];
-}
-
-// Comandos
 interface Commands {
     BillEnables: number[];
     Status: number[];
@@ -49,9 +40,29 @@ interface Commands {
     Cambio3Bs: number[];
 }
 
-// Declaración del módulo
+interface CoinMapping {
+    [key: string]: number;
+}
+
+interface TubeStatusResponse {
+    tubeStatus: {
+        [key: number]: number;
+    };
+    total: number;
+}
+
+interface PaymentCompletedData {
+    message: string;
+    totalPaid: string;
+    change: string | null;
+}
+
+interface TubeStatusEvent {
+    total: number;
+    acceptedBills: number[];
+}
+
 declare module './script' {
-    // Exportaciones
     export const eventEmitter: EventEmitter & {
         on(event: 'tubeStatus', listener: (data: TubeStatusEvent) => void): this;
         on(event: 'paymentCompleted', listener: (data: PaymentCompletedData) => void): this;
@@ -59,5 +70,13 @@ declare module './script' {
         once(event: 'paymentCompleted', listener: (data: PaymentCompletedData) => void): this;
     };
     
+    export const COMMANDS: Commands;
+    export const CAMBIO_VALORES: CambioValor[];
     export function requestAmount(amount: number): void;
+    export function calculateChangeCommands(change: number): number[][];
+    export function checkCoinTubes(): void;
+    export function parseTubeStatus(hexResponse: string): TubeStatusResponse;
+    export function evaluateBill(segments: string): number;
+    export function evaluateCoin(hexResponse: string): number;
+    export function sendCommand(port: SerialPort, command: number[]): void;
 }

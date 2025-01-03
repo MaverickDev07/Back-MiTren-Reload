@@ -14,6 +14,7 @@ type ErrorName =
   | 'NO_TOKEN_PROVIDED'
   | 'TOKEN_EXPIRED_ERROR'
   | 'FORBIDDEN_ERROR'
+  | 'PAYMENT_ERROR'
 
 type ErrorCode =
   | 'ERR_CFG'

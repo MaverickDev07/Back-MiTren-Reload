@@ -4,7 +4,6 @@ import {
   createTicket,
   estadoPagoController,
   generateQR,
-  getPaymentStatus,
   getStationByKioskId,
   listLinesByActive,
   listMethodsByActivate,
@@ -15,12 +14,10 @@ import {
   verifyQrStatus,
 } from './controller'
 import validateRequest from '../../../middlewares/validateRequest'
-import { createTicketSchema, generateCashSchema } from '../../../middlewares/requestSchemas'
-import { computeTotalPrice, getKioskIdByEnv, preloadVeripagosData } from './middleware'
+import { createTicketSchema } from '../../../middlewares/requestSchemas'
+import { computeTotalPrice, getKioskIdByEnv, preloadVeripagosData, verifyPaymentStatus } from './middleware'
 
 const ticketFlow: Router = express.Router()
-// const efectivoController = require('./efectivocontroller')
-
 ticketFlow.get('/step-1/lines', listLinesByActive)
 ticketFlow.get('/step-2/line/:id', listPagedStationsByLine)
 ticketFlow.get('/step-2/env-id/station', [getKioskIdByEnv], getStationByKioskId)
@@ -33,19 +30,22 @@ ticketFlow.post('/step-4/pqr/verify', verifyQrStatus)
 
 // Rutas para pagos POS generales
 ticketFlow.post('/pos/payments', processPaymentPOS);
-ticketFlow.get('/pos/payments/:reference', getPaymentStatus);
 
-// Method PagosEfectivo
 
 // Definir las rutas y asociarlas con los métodos del controlador
-ticketFlow.post('/efectivo/monto', recibirMonto);  // Ruta POST para recibir el monto
+ticketFlow.post('/efectivo/monto', recibirMonto);
 ticketFlow.get('/efectivo/estado', estadoPagoController); 
 
 // Save TICKET
 ticketFlow.post(
   '/step-6/ticket',
-  [computeTotalPrice, validateRequest(createTicketSchema)],
-  createTicket,
-)
+  [
+    validateRequest(createTicketSchema),
+    verifyPaymentStatus,  // Aquí verificamos el pago
+    computeTotalPrice
+  ],
+  createTicket
+);
+
 
 export default ticketFlow

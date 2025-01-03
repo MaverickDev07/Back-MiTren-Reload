@@ -1,0 +1,149 @@
+Verificar un Ticket
+
+httpCopiarPOST http://localhost:3000/api/verifier/verify
+Headers:
+  Authorization: Bearer {tu_token}
+  Content-Type: application/json
+
+Body:
+{
+    "qr_code": "TKT-65718392a12345678-1702937281",
+    "current_station": "ESTACIÓN MUNICIPAL AGRONOMÍA",
+    "current_line": "LÍNEA ROJA"
+}
+
+// Respuesta esperada (ticket válido):
+{
+    "status": "OK",
+    "message": "Ticket válido",
+    "display_color": "green",
+    "ticket_info": {
+        "route": {
+            "origin": "ESTACIÓN MUNICIPAL AGRONOMÍA",
+            "destination": "ESTACIÓN MUNICIPAL COLCAPIRHUA",
+            "origin_line": "LÍNEA ROJA",
+            "destination_line": "LÍNEA VERDE",
+            "transfer": {
+                "station": "ESTACION CENTRAL SAN ANTONIO"
+            }
+        },
+        "journey": {
+            "status": "IN_PROGRESS",
+            "current_station": "ESTACIÓN MUNICIPAL AGRONOMÍA",
+            "current_line": "LÍNEA ROJA",
+            "last_check": "2024-12-29T15:30:00.000Z"
+        },
+        "ticket": {
+            "status": "ACTIVE",
+            "expiry_date": "2024-12-29T19:30:00.000Z",
+            "prices": [
+                {
+                    "type": "GENERAL",
+                    "qty": 2,
+                    "base_price": 5.5
+                }
+            ]
+        }
+    }
+}
+
+// Respuesta (ticket expirado):
+{
+    "status": "EXPIRED",
+    "message": "Ticket caducado",
+    "display_color": "yellow",
+    "ticket_info": {
+        // Similar estructura que arriba
+    }
+}
+
+// Respuesta (ticket inválido):
+{
+    "status": "WRONG",
+    "message": "Ticket inválido",
+    "display_color": "red"
+}
+
+Obtener Historial de Verificaciones
+
+httpCopiarGET http://localhost:3000/api/verifier/history
+Headers:
+  Authorization: Bearer {tu_token}
+
+// Respuesta esperada:
+{
+    "success": true,
+    "verifications": [
+        {
+            "id": "65718392a12345678",
+            "qr_code": "TKT-65718392a12345678-1702937281",
+            "route": {
+                "start": "LÍNEA ROJA - ESTACIÓN MUNICIPAL AGRONOMÍA",
+                "end": "LÍNEA VERDE - ESTACIÓN MUNICIPAL COLCAPIRHUA"
+            },
+            "status": "ACTIVE",
+            "journey_status": "IN_PROGRESS",
+            "checks": [
+                {
+                    "station": "ESTACIÓN MUNICIPAL AGRONOMÍA",
+                    "line": "LÍNEA ROJA",
+                    "time": "2024-12-29T15:30:00.000Z"
+                }
+            ],
+            "expiry_date": "2024-12-29T19:30:00.000Z"
+        }
+        // ... más verificaciones
+    ]
+}
+
+Obtener Estadísticas
+
+httpCopiarGET http://localhost:3000/api/verifier/stats
+Headers:
+  Authorization: Bearer {tu_token}
+
+// Respuesta esperada:
+{
+    "success": true,
+    "stats": {
+        "today": {
+            "total_scans": 45,
+            "by_status": {
+                "active": 20,
+                "expired": 5,
+                "completed": 15,
+                "invalid": 5
+            },
+            "by_line": {
+                "LÍNEA ROJA": 25,
+                "LÍNEA VERDE": 20
+            }
+        },
+        "last_scan": "2024-12-29T15:30:00.000Z"
+    }
+}
+Para probar diferentes escenarios:
+
+Verificar un Transbordo :
+
+jsonCopiar{
+    "qr_code": "TKT-65718392a12345678-1702937281",
+    "current_station": "ESTACION CENTRAL SAN ANTONIO",
+    "current_line": "LÍNEA VERDE"
+}
+
+Verificar destino final :
+
+jsonCopiar{
+    "qr_code": "TKT-65718392a12345678-1702937281",
+    "current_station": "ESTACIÓN MUNICIPAL COLCAPIRHUA",
+    "current_line": "LÍNEA VERDE"
+}
+
+Estación incorrecta :
+
+jsonCopiar{
+    "qr_code": "TKT-65718392a12345678-1702937281",
+    "current_station": "ESTACIÓN EQUIVOCADA",
+    "current_line": "LÍNEA ROJA"
+}

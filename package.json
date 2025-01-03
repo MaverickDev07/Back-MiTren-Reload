@@ -36,7 +36,9 @@
     "boom": "^7.3.0",
     "cors": "^2.8.5",
     "debug": "^4.3.5",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
+    "escpos": "^3.0.0-alpha.6",
+    "escpos-usb": "^3.0.0-alpha.4",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "joi": "^17.13.3",
@@ -52,7 +54,6 @@
     "sequelize": "^6.37.3",
     "sequelize-typescript": "^2.1.6",
     "serialport": "^12.0.0"
-    
   },
   "devDependencies": {
     "@eslint/js": "^9.8.0",

@@ -1,5 +1,4 @@
 import { PaymentModel } from '../../database/models/paymentPos.model'
-
 import { PosService } from './pos.service';
 import { PaymentRequest, Payment, PosPaymentRequest } from '../../types/payment.types';
 
@@ -7,6 +6,7 @@ export class PaymentService {
   private posService: PosService;
   private readonly DEFAULT_CURRENCY = '068'; // BOB por defecto
   private readonly DEFAULT_TERMINAL = '10210008'; // Terminal para BOB
+  private readonly DEFAULT_COMMERCE = '9999999';
 
   constructor() {
     this.posService = new PosService();
@@ -30,7 +30,7 @@ export class PaymentService {
         autorizacion: posResponse.autorizacion,
         pan: posResponse.pan,
         mensaje: posResponse.mensaje,
-        comercio: '9999999',
+        comercio: this.DEFAULT_COMMERCE,
         terminal: this.DEFAULT_TERMINAL
       });
 
@@ -38,9 +38,5 @@ export class PaymentService {
     } catch (error) {
       throw new Error(`Error al procesar pago: ${error.message}`);
     }
-  }
-
-  async getPaymentByReference(reference: string): Promise<Payment | null> {
-    return PaymentModel.findOne({ referencia: reference });
   }
 }

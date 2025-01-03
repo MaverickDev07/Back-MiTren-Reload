@@ -106,7 +106,8 @@ function requestAmount(amount) {
         targetAmount = amount;
         console.log(`script.js - Monto recibido: ${targetAmount}`);
         checkCoinTubes(); // Consultar el estado de los tubos del monedero
-        enableBillAcceptor();
+        enableBillAcceptor()
+        sendCommand(billeteroPort, COMMANDS.DesinhibitBilletero);
     } else {
         //console.log('script.js - Monto inválido recibido.');
     }
@@ -249,7 +250,9 @@ function inhibitDevices() {
 }
 
 
-// Procesar datos del billetero
+
+let lastApiladoTime = 0; // Marca de tiempo del último billete apilado
+
 billeteroParser.on('data', (data) => {
     const newResponse = data.toString('hex').toUpperCase().match(/.{1,2}/g).join(' ');
     const currentTime = Date.now();
@@ -262,6 +265,12 @@ billeteroParser.on('data', (data) => {
     lastCommand = newResponse;
     lastCommandTime = currentTime;
 
+    // Si estamos dentro del rango de tiempo para ignorar comandos, salir
+    if (currentTime - lastApiladoTime < 1500) {
+        return;
+    }
+
+    billeteroBuffer = '';
     billeteroBuffer += newResponse + ' ';
     const responseSegments = billeteroBuffer.trim().split(' ');
 
@@ -269,36 +278,61 @@ billeteroParser.on('data', (data) => {
     if (responseSegments.length >= 7) {
         const lastSegments = responseSegments.slice(-7).join(' ');
 
-        if (lastSegments.startsWith('02')) {
-            const amount = evaluateBill(lastSegments); // Verifica cómo se calcula 'amount'
-            if (amount > 0) {
-                // Verificar si 'amount' está en la lista de billetes aceptados
-                    let command;
-                    // Determinar qué billetes habilitar según el monto
-                    if (amount <= 5.1) {
-                         command = COMMANDS.InhibitBills;
-                    } else if (amount <= 15.1) {
-                        command = COMMANDS.Enable10;
-                    } else if (amount <= 45.1) {
-                        command = COMMANDS.Enable10_20;
-                    } else if (amount <= 95.1) {
-                        command = COMMANDS.Enable10_20_50;
-                    } else if (amount <= 195.1) {
-                        command = COMMANDS.Enable10_20_50_100;
-                    } else {
-                        command = COMMANDS.Enable10_20_50_100_200;
-                    }
+        // Comprobar si el comando corresponde a billetes válidos
+        if (
+            lastSegments === '02 07 CC 01 02 00 28' || // Billete de 10 Bs
+            lastSegments === '02 07 CC 02 02 00 27' || // Billete de 20 Bs
+            lastSegments === '02 07 CC 03 02 00 26' || // Billete de 50 Bs
+            lastSegments === '02 07 CC 04 02 00 25' || // Billete de 100 Bs
+            lastSegments === '02 07 CC 05 02 00 24'    // Billete de 200 Bs
+        ) {
+            billeteroBuffer = responseSegments.slice(-6).join(' '); // Limpiar ruido
+            return;
+        }
 
-                    sendCommand(billeteroPort, command);
+        if (lastSegments.startsWith('02')) {
+            const amount = evaluateBill(lastSegments);
+
+            if (amount > 0) {
+                let command;
+
+                // Determinar qué billetes habilitar según el monto
+                if (amount <= 5.1) {
+                    command = COMMANDS.InhibitBills;
+                    acceptedBills = [];
+                } else if (amount <= 15.1) {
+                    command = COMMANDS.Enable10;
+                    acceptedBills = [10];
+                } else if (amount <= 45.1) {
+                    command = COMMANDS.Enable10_20;
+                    acceptedBills = [10, 20];
+                } else if (amount <= 95.1) {
+                    command = COMMANDS.Enable10_20_50;
+                    acceptedBills = [10, 20, 50];
+                } else if (amount <= 195.1) {
+                    command = COMMANDS.Enable10_20_50_100;
+                    acceptedBills = [10, 20, 50, 100];
+                } else {
+                    command = COMMANDS.Enable10_20_50_100_200;
+                    acceptedBills = [10, 20, 50, 100, 200];
+                }
+
+                if (acceptedBills.includes(amount)) {
+                    // Actualizar marca de tiempo del billete apilado
+                    lastApiladoTime = currentTime;
+
+                    sendCommand(billeteroPort, COMMANDS.AcceptBill); // Aceptar billete
                     totalAmount += amount;
-                    console.log(`Billete apilado: ${amount}Bs`);
+                    console.log(`Billete apilado: ${amount}Bs comando: ${lastSegments}`);
                     evaluatePayment();
 
+                } else {
+                    sendCommand(billeteroPort, COMMANDS.RejectBill); // Rechazar billete
+                    console.log(`Billete rechazado: ${amount}Bs no permitido`);
+                }
 
-                    // Limpiar el buffer tras procesar un comando válido
-                    billeteroBuffer = '';
-   
-                
+                // Limpiar el buffer tras procesar un comando válido
+                billeteroBuffer = '';
             } else {
                 // Eliminar datos basura del buffer
                 billeteroBuffer = responseSegments.slice(-6).join(' ');
@@ -390,12 +424,14 @@ function evaluateCoin(hexResponse) {
 // Evaluar el progreso del pago
 function evaluatePayment() {
     console.log(`Total acumulado: ${totalAmount.toFixed(2)}Bs`);
-    console.log('----------------------------------------------------------------------');
+    //console.log('----------------------------------------------------------------------');
     if (totalAmount >= targetAmount) {
         const change = totalAmount - targetAmount;
         //console.log('----------------------------------------------------------------------');
         //console.log(`Pago completado. Total pagado: ${totalAmount.toFixed(2)}Bs`);
-
+        inhibitDevices(); // Inhibir los dispositivos al finalizar
+        console.log('Pago completado - script')
+        totalAmount = 0;
         // Emitir el estado de "Pago completado" a io.js
         eventEmitter.emit('paymentCompleted', {
             message: 'Pago completado',
@@ -404,7 +440,7 @@ function evaluatePayment() {
         });
         
         if (change > 0) {
-            //console.log(`Entregando cambio: ${change.toFixed(2)}Bs`);
+            (`Entregando cambio: ${change.toFixed(2)}Bs`);
             const changeCommands = calculateChangeCommands(change);
             deliverChange(changeCommands); // Entregar el cambio
         } else {

@@ -29,7 +29,7 @@ const UserSchema = new Schema<UserAttributes>(
     },
     role_name: {
       type: String,
-      enum: ['ROOT', 'ADMIN', 'BOLETERIA'],
+      enum: ['ROOT', 'ADMIN', 'BOLETERIA','BOLETERO'],
       uppercase: true,
       trim: true,
       required: true,

@@ -1,0 +1,10 @@
+una agenda publica 
+lunes a Sabado 
+8 a 12 y de 3 a 8
+
+integracion a wasapt
+para confirmar la cita medica
+
+panel para que modifiques los dias disponibles y panel apra personalizar los mensajes
+
+app de agenda electronica 

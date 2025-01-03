@@ -19,9 +19,11 @@ import VeripagosService from '../../../utils/VeripagosService'
 import TicketRepository from '../../../repositories/TicketRepository'
 import TicketResource from '../../../resources/TicketResource'
 import { createPdfBinary } from '../../../utils/LibPdf'
-import { ticketDocument } from './generatePDF'
 import { PaymentService } from '../../../repositories/ticket_flow/paymentPOS';
-import { requestAmount, eventEmitter } from '../../../../scripts/script';
+import { requestAmount, eventEmitter } from '../../../types/script';
+import { ticketDocument } from './generatePDF'
+import { UsbPrinterService } from '../../../utils/PrinterService'
+import { PaymentResponse } from '../../../types/payment.types'
 
 
 
@@ -137,81 +139,42 @@ export const verifyQrStatus = async (req: Request, res: Response, next: NextFunc
   }
 }
 
-export const createTicket = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const repository = new TicketRepository()
-    const ticketResource = new TicketResource(await repository.create(req.body))
-    const ticket = ticketResource.item()
-    const docDefinition = ticketDocument(ticket)
-
-    createPdfBinary(docDefinition, function (binary) {
-      res.contentType('application/pdf')
-      res.setHeader('Content-Disposition', 'attachment; filename=ticket.pdf')
-      res.send(Buffer.from(binary, 'base64'))
-    })
-  } catch (error) {
-    next(error)
-  }
-}
-
 export const processPaymentPOS = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { monto } = req.body;
 
-    // Validación del monto
-    if (!monto || isNaN(monto) || monto <= 0) {
+    // Validación estricta del monto
+    if (!monto || isNaN(monto) || monto <= 0 || monto > 99999.99) {
       return res.status(400).json({
         success: false,
-        message: 'Monto inválido. Debe ser un número mayor a 0',
+        code: 'INVALID_AMOUNT',
+        message: 'Monto inválido. Debe ser un número entre 0 y 99,999.99',
       });
     }
 
     const paymentService = new PaymentService();
     const payment = await paymentService.createPayment({ monto });
 
-    res.status(201).json({
+    const response: PaymentResponse = {
       success: true,
-      payment,
-    });
+      payment: {
+        estado: payment.estado,
+        referencia: payment.referencia!,
+        monto: payment.monto,
+        mensaje: payment.mensaje!,
+        autorizacion: payment.autorizacion
+      }
+    };
+
+    res.status(201).json(response);
   } catch (error: any) {
-    next(error);
-  }
-};
-
-export const getPaymentStatus = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { reference } = req.params;
-
-    if (!reference) {
-      return res.status(400).json({
-        success: false,
-        message: 'Referencia de pago requerida',
-      });
-    }
-
-    const paymentService = new PaymentService();
-    const payment = await paymentService.getPaymentByReference(reference);
-
-    if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Pago no encontrado',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      payment,
-    });
-  } catch (error: any) {
-    next(error);
+    next(new Error(`Error procesando pago: ${error.message}`));
   }
 };
 
 let totalMonedero: number = 0;
 let billetesAceptados: number[] = [];
 
-// Controlador para recibir el monto
 export const recibirMonto = (req: Request, res: Response): void => {
     const { amount } = req.body;
 
@@ -221,7 +184,6 @@ export const recibirMonto = (req: Request, res: Response): void => {
     }
 
     requestAmount(amount);
-
     eventEmitter.once('tubeStatus', (data) => {
         totalMonedero = data.total;
         billetesAceptados = data.acceptedBills;
@@ -232,18 +194,91 @@ export const recibirMonto = (req: Request, res: Response): void => {
     });
 };
 
-// Controlador para consultar el estado del pago
 export const estadoPagoController = (req: Request, res: Response): void => {
-    eventEmitter.once('paymentCompleted', (data) => {
-        res.status(200).json({
-            EstadoPago: 'completado',
-            TotalPagado: data.totalPaid
+  // Crear el timeout de 2 minutos (120000 ms)
+  const timeout = setTimeout(() => {
+      // Limpiar los event listeners antes de enviar la respuesta
+      eventEmitter.removeAllListeners('paymentCompleted');
+      eventEmitter.removeAllListeners('tubeStatus');
+      
+      if (!res.headersSent) {
+          res.status(408).json({ 
+            success: false,
+            code: 'PAYMENT_TIMEOUT',
+            message: 'La operación de pago ha excedido el tiempo de espera',
+            details: {
+                maxWaitTime: '2 minutos',
+                suggestion: 'Por favor, intente realizar el pago nuevamente'
+            }
         });
-    });
+      }
+  }, 120000);
 
-    eventEmitter.once('tubeStatus', () => {
-        if (!res.headersSent) {
-            res.status(200).json({ EstadoPago: 'en proceso' });
-        }
+  // Listener para pago completado
+  eventEmitter.once('paymentCompleted', (data) => {
+      clearTimeout(timeout); // Limpiar el timeout
+      eventEmitter.removeAllListeners('tubeStatus'); // Limpiar el otro listener
+      
+      res.status(200).json({
+        success: true,
+        code: 'PAYMENT_COMPLETED',
+        EstadoPago: 'completado',
+        TotalPagado: data.totalPaid,
+        timestamp: new Date().toISOString()
     });
+  });
+
+  // Listener para estado del tubo
+  eventEmitter.once('tubeStatus', () => {
+      clearTimeout(timeout); // Limpiar el timeout
+      
+      if (!res.headersSent) {
+          
+          res.status(200).json({
+            success: true,
+            code: 'PAYMENT_IN_PROGRESS',
+            EstadoPago: 'en proceso',
+            timestamp: new Date().toISOString()
+        });
+      }
+  });
+};
+
+export const createTicket = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const repository = new TicketRepository();
+    const printerService = new UsbPrinterService();
+
+    const printerReady = await printerService.initialize();
+    if (!printerReady) {
+      console.warn('Impresora no disponible, continuando sin impresión');
+    }
+    // Crear datos base del ticket
+    const ticketData = {
+      ...req.body,
+      qr_code: `TKT-${Date.now()}`, // Temporal, se actualizará en el pre-save
+      expiry_date: new Date(Date.now() + (4 * 60 * 60 * 1000)) // 4 horas desde ahora
+    };
+
+    const ticketResource = new TicketResource(await repository.create(ticketData));
+    const ticket = ticketResource.item();
+    
+    try {
+      await printerService.printTicket(ticket);
+    } catch (printError) {
+      console.error('Error de impresión:', printError);
+      // Podemos decidir si queremos continuar aunque falle la impresión
+    }
+
+    // prueba local para ver el ticked y su pdf de respuesta
+    const docDefinition = ticketDocument(ticket);
+
+    createPdfBinary(docDefinition, function (binary) {
+      res.contentType('application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename=ticket.pdf');
+      res.send(Buffer.from(binary, 'base64'));
+    });
+  } catch (error) {
+    next(error);
+  }
 };
